@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiche Installation Électrique</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f4f6f8;color:#23272b;min-height:100vh}
+
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:100}
+.sidebar-overlay.open{display:block}
+.sidebar{position:fixed;top:0;left:-370px;width:350px;max-width:90vw;height:100vh;background:#fff;box-shadow:2px 0 16px rgba(0,0,0,0.12);z-index:200;transition:left .3s ease;display:flex;flex-direction:column}
+.sidebar.open{left:0}
+.sidebar-header{padding:24px 20px 12px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center}
+.sidebar-header h2{font-size:1.1rem;font-weight:600}
+.sidebar-close{background:none;border:none;font-size:1.5rem;cursor:pointer;color:#666;padding:4px 8px;border-radius:4px}
+.sidebar-close:hover{background:#f0f0f0}
+.sidebar-body{flex:1;overflow-y:auto;padding:16px 20px}
+.history-entry{padding:14px 0;border-bottom:1px solid #f0f0f0}
+.history-entry:last-child{border-bottom:none}
+.history-date{font-size:.8rem;color:#888;margin-bottom:4px}
+.history-tech{font-size:.85rem;font-weight:600;margin-bottom:6px}
+.history-changes{font-size:.82rem;color:#444;line-height:1.5}
+.history-field{margin-bottom:2px}
+.history-field .lbl{color:#888}
+.history-empty{color:#aaa;font-size:.9rem;margin-top:20px;text-align:center}
+
+.top-bar{background:#fff;border-bottom:1px solid #e5e7eb;padding:16px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:50}
+.menu-btn{background:none;border:none;font-size:1.6rem;cursor:pointer;color:#333;padding:4px 8px;border-radius:6px;line-height:1}
+.menu-btn:hover{background:#f0f0f0}
+.top-bar h1{font-size:1.15rem;font-weight:600}
+.top-bar-actions{margin-left:auto;display:flex;gap:10px}
+
+.btn{padding:8px 18px;border:none;border-radius:6px;font-size:.88rem;cursor:pointer;font-weight:500;transition:background .15s}
+.btn-primary{background:#2563eb;color:#fff}
+.btn-primary:hover{background:#1d4ed8}
+.btn-secondary{background:#e5e7eb;color:#333}
+.btn-secondary:hover{background:#d1d5db}
+.btn-danger{background:#dc2626;color:#fff;padding:4px 12px;font-size:.8rem}
+.btn-danger:hover{background:#b91c1c}
+.btn-success{background:#16a34a;color:#fff;padding:6px 14px;font-size:.84rem}
+.btn-success:hover{background:#15803d}
+
+.main-container{max-width:720px;margin:32px auto;padding:0 20px 60px}
+.card{background:#fff;border-radius:10px;border:1px solid #e5e7eb;padding:28px 28px 20px;margin-bottom:20px}
+.card-title{font-size:.95rem;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.5px;margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid #f0f0f0}
+.field-row{display:flex;align-items:baseline;padding:10px 0;border-bottom:1px solid #fafafa;gap:12px}
+.field-row:last-child{border-bottom:none}
+.field-label{flex:0 0 220px;font-size:.9rem;color:#666;font-weight:500}
+.field-value{flex:1;font-size:.95rem;color:#23272b;word-break:break-word}
+.field-value.empty{color:#bbb;font-style:italic}
+
+.field-input{width:100%;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:.9rem;font-family:inherit;background:#fafbfc;color:#23272b}
+.field-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,0.1)}
+.field-input:disabled{background:#f0f0f0;color:#999;cursor:not-allowed}
+textarea.field-input{min-height:80px;resize:vertical}
+.input-group{display:flex;align-items:center;gap:8px}
+.input-group .unit{font-size:.85rem;color:#888;white-space:nowrap}
+
+.badge{display:inline-block;padding:3px 12px;border-radius:20px;font-size:.82rem;font-weight:600}
+.badge-bon{background:#d1fae5;color:#065f46}
+.badge-moyen{background:#fef3c7;color:#92400e}
+.badge-mauvais{background:#fee2e2;color:#991b1b}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:300;justify-content:center;align-items:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:12px;padding:32px;width:380px;max-width:90vw;box-shadow:0 8px 30px rgba(0,0,0,0.15)}
+.modal h3{margin-bottom:8px;font-size:1.05rem}
+.modal p{font-size:.88rem;color:#666;margin-bottom:18px;line-height:1.5}
+.modal-input{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:.95rem;margin-bottom:8px}
+.modal-input:focus{outline:none;border-color:#2563eb}
+.modal-error{color:#dc2626;font-size:.82rem;margin-bottom:12px;min-height:1.2em}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
+.loading{text-align:center;padding:60px 20px;color:#888;font-size:.95rem}
+
+/* TABLEAU INTERVENTIONS */
+.interventions-table{width:100%;border-collapse:collapse;margin-top:10px}
+.interventions-table th{text-align:left;font-size:.82rem;color:#888;font-weight:600;padding:8px 10px;border-bottom:2px solid #e5e7eb}
+.interventions-table td{padding:8px 10px;border-bottom:1px solid #f0f0f0;font-size:.88rem;vertical-align:top}
+.interventions-table tr:last-child td{border-bottom:none}
+.interventions-table .col-date{width:120px}
+.interventions-table .col-actions{width:50px;text-align:center}
+.interventions-empty{color:#aaa;font-size:.88rem;font-style:italic;padding:14px 0}
+.interventions-add{margin-top:12px;display:flex;gap:8px;align-items:flex-start}
+.interventions-add input,.interventions-add textarea{font-family:inherit}
+.interventions-add .add-date{width:130px}
+.interventions-add .add-desc{flex:1;min-height:36px}
+
+@media(max-width:600px){
+  .field-row{flex-direction:column;gap:4px}
+  .field-label{flex:none;font-size:.82rem}
+  .card{padding:20px 18px 16px}
+  .main-container{padding:0 10px 40px;margin-top:20px}
+  .top-bar{padding:14px 16px}
+  .interventions-add{flex-direction:column}
+  .interventions-add .add-date{width:100%}
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h2>Historique des modifications</h2>
+    <button class="sidebar-close" id="sidebarClose">&times;</button>
+  </div>
+  <div class="sidebar-body" id="historyList">
+    <div class="history-empty">Aucune modification enregistrée.</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>Authentification requise</h3>
+    <p>Entrez le mot de passe pour modifier cette fiche.</p>
+    <input type="password" class="modal-input" id="passwordInput" placeholder="Mot de passe" autocomplete="off">
+    <div class="modal-error" id="modalError"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="modalCancel">Annuler</button>
+      <button class="btn btn-primary" id="modalConfirm">Valider</button>
+    </div>
+  </div>
+</div>
+
+<div class="top-bar">
+  <button class="menu-btn" id="menuBtn" title="Historique">&#8943;</button>
+  <h1>Fiche Installation Électrique</h1>
+  <div class="top-bar-actions">
+    <button class="btn btn-primary" id="editBtn">Modifier</button>
+    <button class="btn btn-primary" id="saveBtn" style="display:none">Enregistrer</button>
+    <button class="btn btn-secondary" id="cancelBtn" style="display:none">Annuler</button>
+  </div>
+</div>
+
+<div class="main-container" id="mainContent">
+  <div class="loading">Chargement des données...</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+
+  // ============================================================
+  //  CONFIGURATION
+  // ============================================================
+  const SUPABASE_URL = "https://dhporzfvmxmybcivixpr.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRocG9yemZ2bXhteWJjaXZpeHByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMzcyNjksImV4cCI6MjA5MjkxMzI2OX0.oJzgFmTiilqdnSyBFxouE0StOH1eP6YB7KSb4br5oUU";
+
+  const PASSWORD_ADMIN = "admin2025";
+  const PASSWORD_TECH  = "tech2025";
+
+  // ============================================================
+  //  TYPES D'ARMOIRES (menu déroulant avec sous-catégories)
+  // ============================================================
+  const TYPES_ARMOIRES = {
+    "": "-- Choisir --",
+    "Armoire de comptage tarif jaune 160/240A": "Armoire de comptage — Tarif jaune 160/240A",
+    "Armoire de comptage tarif jaune 400A": "Armoire de comptage — Tarif jaune 400A",
+    "Armoire de comptage tarif bleu mono": "Armoire de comptage — Tarif bleu mono",
+    "Armoire de comptage tarif bleu tétra": "Armoire de comptage — Tarif bleu tétra",
+    "Armoire générale 400A": "Armoire générale — 400A",
+    "Armoire générale 250A": "Armoire générale — 250A",
+    "Armoire PC 125A": "Armoire PC 125A",
+    "Armoire de cantonnement": "Armoire de cantonnement",
+    "Armoire de grue": "Armoire de grue",
+    "Armoire de distribution PC et spécifique": "Armoire de distribution PC et spécifique (chauffage...)",
+    "Armoire IRVE": "Armoire IRVE (infrastructure de recharge pour véhicules électriques)",
+    "Armoire de commande de phares et panneaux lumineux": "Armoire de commande de phares et panneaux lumineux"
+  };
+
+  const TYPE_GROUPS = [
+    {label:"Armoire de comptage", values:[
+      "Armoire de comptage tarif jaune 160/240A",
+      "Armoire de comptage tarif jaune 400A",
+      "Armoire de comptage tarif bleu mono",
+      "Armoire de comptage tarif bleu tétra"
+    ]},
+    {label:"Armoire générale", values:[
+      "Armoire générale 400A",
+      "Armoire générale 250A"
+    ]},
+    {label:"Autres", values:[
+      "Armoire PC 125A",
+      "Armoire de cantonnement",
+      "Armoire de grue",
+      "Armoire de distribution PC et spécifique",
+      "Armoire IRVE",
+      "Armoire de commande de phares et panneaux lumineux"
+    ]}
+  ];
+
+  // ============================================================
+  //  CHAMPS
+  // ============================================================
+  const FIELDS = {
+    reference:      {label:"Référence de l'armoire",type:"text",level:"admin"},
+    type_coffrage:  {label:"Type d'armoire",type:"type_armoire",level:"admin"},
+    tension:        {label:"Tension de l'installation (V)",type:"text",level:"admin"},
+    chantier_nom:   {label:"Nom du chantier",type:"text",level:"tech"},
+    chantier_lieu:  {label:"Lieu du chantier",type:"text",level:"tech"},
+    date_pose:      {label:"Date de pose",type:"date",level:"tech"},
+    date_depose:    {label:"Date de dépose",type:"date",level:"tech"},
+    date_controle:  {label:"Date du contrôle",type:"date",level:"tech"},
+    etat:           {label:"État général",type:"select",level:"tech",options:["","Bon","Moyen","Mauvais"]},
+    controle_seuil: {label:"Contrôle différentiel (mA)",type:"ma",level:"tech"},
+    technicien:     {label:"Technicien",type:"text",level:"tech"},
+    observations:   {label:"Observations",type:"textarea",level:"tech"}
+  };
+
+  const SECTIONS = [
+    {title:"Identification",fields:["reference","type_coffrage","tension"]},
+    {title:"Chantier",fields:["chantier_nom","chantier_lieu","date_pose","date_depose"]},
+    {title:"Contrôle",fields:["date_controle","etat","controle_seuil"]},
+    {title:"Informations complémentaires",fields:["technicien","observations"]}
+  ];
+
+  // ============================================================
+  //  INIT SUPABASE
+  // ============================================================
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const params = new URLSearchParams(window.location.search);
+  let installationId = params.get("id") ? parseInt(params.get("id")) : 1;
+
+  let currentData = {};
+  let interventions = [];
+  let editMode = false;
+  let accessLevel = null;
+
+  const $ = function(id){ return document.getElementById(id); };
+  const mainContent = $("mainContent");
+  const editBtn = $("editBtn");
+  const saveBtn = $("saveBtn");
+  const cancelBtn = $("cancelBtn");
+  const sidebar = $("sidebar");
+  const sidebarOverlay = $("sidebarOverlay");
+  const historyList = $("historyList");
+  const modalOverlay = $("modalOverlay");
+  const modalError = $("modalError");
+  const passwordInput = $("passwordInput");
+
+  // ============================================================
+  //  UTILITAIRES
+  // ============================================================
+  function formatDate(d){
+    if(!d) return "";
+    var parts = d.split("-");
+    if(parts.length===3) return parts[2]+"/"+parts[1]+"/"+parts[0];
+    return d;
+  }
+
+  function formatTimestamp(ts){
+    var d = new Date(ts);
+    return d.toLocaleDateString("fr-FR")+" à "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+  }
+
+  function renderEtat(val){
+    if(!val) return '<span class="empty">Non renseigné</span>';
+    var cls = "badge-"+val.toLowerCase();
+    return '<span class="badge '+cls+'">'+val+'</span>';
+  }
+
+  function renderTypeArmoire(val){
+    if(!val) return '<span class="empty">Non renseigné</span>';
+    return TYPES_ARMOIRES[val] || val;
+  }
+
+  function buildTypeArmoireSelect(currentVal, disabled){
+    var dis = disabled ? "disabled" : "";
+    var html = '<select class="field-input" id="input_type_coffrage" '+dis+'>';
+    html += '<option value="">-- Choisir --</option>';
+    TYPE_GROUPS.forEach(function(group){
+      html += '<optgroup label="'+group.label+'">';
+      group.values.forEach(function(val){
+        var sel = (val === currentVal) ? "selected" : "";
+        html += '<option value="'+val+'" '+sel+'>'+TYPES_ARMOIRES[val]+'</option>';
+      });
+      html += '</optgroup>';
+    });
+    html += '</select>';
+    return html;
+  }
+
+  // ============================================================
+  //  RENDU INTERVENTIONS (LECTURE)
+  // ============================================================
+  function renderInterventionsView(){
+    var html = '<div class="card"><div class="card-title">Interventions maintenance</div>';
+    if(interventions.length === 0){
+      html += '<div class="interventions-empty">Aucune intervention enregistrée.</div>';
+    } else {
+      html += '<table class="interventions-table">';
+      html += '<thead><tr><th class="col-date">Date</th><th>Intervention</th></tr></thead><tbody>';
+      interventions.forEach(function(inter){
+        html += '<tr>';
+        html += '<td>'+( inter.date_intervention ? formatDate(inter.date_intervention) : "")+'</td>';
+        html += '<td>'+(inter.description || "").replace(/\n/g,"<br>")+'</td>';
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  // ============================================================
+  //  RENDU INTERVENTIONS (EDITION)
+  // ============================================================
+  function renderInterventionsEdit(){
+    var html = '<div class="card"><div class="card-title">Interventions maintenance</div>';
+
+    if(interventions.length === 0 && !editMode){
+      html += '<div class="interventions-empty">Aucune intervention enregistrée.</div>';
+    } else {
+      html += '<table class="interventions-table">';
+      html += '<thead><tr><th class="col-date">Date</th><th>Intervention</th><th class="col-actions"></th></tr></thead><tbody>';
+      interventions.forEach(function(inter, index){
+        var canEdit = (accessLevel === "admin") || (inter.created_by === (currentData.technicien || ""));
+        var dis = canEdit ? "" : "disabled";
+        html += '<tr>';
+        html += '<td><input type="date" class="field-input inter-date" data-index="'+index+'" value="'+(inter.date_intervention || "")+'" '+dis+'></td>';
+        html += '<td><input type="text" class="field-input inter-desc" data-index="'+index+'" value="'+(inter.description || "").replace(/"/g,"&quot;")+'" '+dis+'></td>';
+        html += '<td>';
+        if(canEdit){
+          html += '<button class="btn btn-danger inter-delete" data-id="'+inter.id+'">X</button>';
+        }
+        html += '</td>';
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+    }
+
+    // Bouton ajouter
+    html += '<div class="interventions-add">';
+    html += '<input type="date" class="field-input add-date" id="newInterDate">';
+    html += '<input type="text" class="field-input add-desc" id="newInterDesc" placeholder="Description de l\'intervention">';
+    html += '<button class="btn btn-success" id="addInterBtn">Ajouter</button>';
+    html += '</div>';
+
+    html += '</div>';
+    return html;
+  }
+
+  // ============================================================
+  //  RENDU MODE LECTURE
+  // ============================================================
+  function renderView(){
+    var label = currentData.label_controle || "Contrôle différentiel (mA)";
+    var html = "";
+
+    SECTIONS.forEach(function(sec){
+      html += '<div class="card"><div class="card-title">'+sec.title+'</div>';
+      sec.fields.forEach(function(key){
+        var f = FIELDS[key];
+        var val = currentData[key] || "";
+        var fieldLabel = key === "controle_seuil" ? label : f.label;
+        var displayVal;
+
+        if(key==="etat"){
+          displayVal = renderEtat(val);
+        } else if(key==="type_coffrage"){
+          displayVal = renderTypeArmoire(val);
+        } else if(f.type==="date"){
+          displayVal = val ? formatDate(val) : '<span class="empty">Non renseigné</span>';
+        } else if(f.type==="ma"){
+          displayVal = val ? val+" mA" : '<span class="empty">Non renseigné</span>';
+        } else if(f.type==="textarea"){
+          displayVal = val ? val.replace(/\n/g,"<br>") : '<span class="empty">Non renseigné</span>';
+        } else {
+          displayVal = val ? val : '<span class="empty">Non renseigné</span>';
+        }
+
+        html += '<div class="field-row">';
+        html += '<div class="field-label">'+fieldLabel+'</div>';
+        html += '<div class="field-value">'+displayVal+'</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    });
+
+    html += renderInterventionsView();
+    mainContent.innerHTML = html;
+  }
+
+  // ============================================================
+  //  RENDU MODE EDITION
+  // ============================================================
+  function renderEdit(){
+    var label = currentData.label_controle || "Contrôle différentiel (mA)";
+    var html = "";
+
+    if(accessLevel === "admin"){
+      html += '<div class="card"><div class="card-title">Configuration</div>';
+      html += '<div class="field-row">';
+      html += '<div class="field-label">Nom du contrôle (mA)</div>';
+      html += '<div class="field-value"><input type="text" class="field-input" id="input_label_controle" value="'+label+'"></div>';
+      html += '</div></div>';
+    }
+
+    SECTIONS.forEach(function(sec){
+      html += '<div class="card"><div class="card-title">'+sec.title+'</div>';
+      sec.fields.forEach(function(key){
+        var f = FIELDS[key];
+        var val = currentData[key] || "";
+        var fieldLabel = key === "controle_seuil" ? label : f.label;
+        var disabled = "";
+
+        if(accessLevel === "tech" && f.level === "admin"){
+          disabled = "disabled";
+        }
+
+        html += '<div class="field-row">';
+        html += '<div class="field-label">'+fieldLabel+'</div>';
+        html += '<div class="field-value">';
+
+        if(f.type === "type_armoire"){
+          html += buildTypeArmoireSelect(val, accessLevel === "tech");
+        } else if(f.type === "select"){
+          html += '<select class="field-input" id="input_'+key+'" '+disabled+'>';
+          f.options.forEach(function(opt){
+            var sel = (opt === val) ? "selected" : "";
+            var display = opt === "" ? "-- Choisir --" : opt;
+            html += '<option value="'+opt+'" '+sel+'>'+display+'</option>';
+          });
+          html += '</select>';
+        } else if(f.type === "textarea"){
+          html += '<textarea class="field-input" id="input_'+key+'" '+disabled+'>'+val+'</textarea>';
+        } else if(f.type === "ma"){
+          html += '<div class="input-group">';
+          html += '<input type="number" class="field-input" id="input_'+key+'" value="'+val+'" '+disabled+'>';
+          html += '<span class="unit">mA</span>';
+          html += '</div>';
+        } else if(f.type === "date"){
+          html += '<input type="date" class="field-input" id="input_'+key+'" value="'+val+'" '+disabled+'>';
+        } else {
+          html += '<input type="text" class="field-input" id="input_'+key
+          html += '<input type="text" class="field-input" id="input_'+key+'" value="'+(val || "").replace(/"/g,"&quot;")+'" '+disabled+'>';
+        }
+
+        html += '</div></div>';
+      });
+      html += '</div>';
+    });
+
+    html += renderInterventionsEdit();
+    mainContent.innerHTML = html;
+    bindInterventionEvents();
+  }
+
+  // ============================================================
+  //  CHARGER LES DONNÉES
+  // ============================================================
+  async function loadData(){
+    var {data, error} = await supabase
+      .from("installations")
+      .select("*")
+      .eq("id", installationId)
+      .single();
+
+    if(error || !data){
+      mainContent.innerHTML = '<div class="loading">Installation introuvable (id='+installationId+')</div>';
+      return;
+    }
+    currentData = data;
+    await loadInterventions();
+    renderView();
+  }
+
+  // ============================================================
+  //  CHARGER LES INTERVENTIONS
+  // ============================================================
+  async function loadInterventions(){
+    var {data, error} = await supabase
+      .from("interventions")
+      .select("*")
+      .eq("installation_id", installationId)
+      .order("created_at", {ascending: true});
+
+    if(error || !data){
+      interventions = [];
+    } else {
+      interventions = data;
+    }
+  }
+
+  // ============================================================
+  //  CHARGER L'HISTORIQUE
+  // ============================================================
+  async function loadHistory(){
+    var {data, error} = await supabase
+      .from("historique")
+      .select("*")
+      .eq("installation_id", installationId)
+      .order("date_modification", {ascending: false});
+
+    if(error || !data || data.length === 0){
+      historyList.innerHTML = '<div class="history-empty">Aucune modification enregistrée.</div>';
+      return;
+    }
+
+    var html = "";
+    data.forEach(function(entry){
+      html += '<div class="history-entry">';
+      html += '<div class="history-date">'+formatTimestamp(entry.date_modification)+'</div>';
+      html += '<div class="history-tech">'+(entry.technicien || "Inconnu")+'</div>';
+      html += '<div class="history-changes">'+entry.modifications.replace(/\n/g,"<br>")+'</div>';
+      html += '</div>';
+    });
+    historyList.innerHTML = html;
+  }
+
+  // ============================================================
+  //  AJOUTER UNE INTERVENTION
+  // ============================================================
+  async function addIntervention(){
+    var dateInput = document.getElementById("newInterDate");
+    var descInput = document.getElementById("newInterDesc");
+    if(!dateInput || !descInput) return;
+
+    var dateVal = dateInput.value.trim();
+    var descVal = descInput.value.trim();
+
+    if(!dateVal && !descVal){
+      alert("Veuillez remplir au moins un champ.");
+      return;
+    }
+
+    var techName = "";
+    var techInput = document.getElementById("input_technicien");
+    if(techInput) techName = techInput.value.trim();
+    if(!techName) techName = currentData.technicien || "Inconnu";
+
+    var {error} = await supabase
+      .from("interventions")
+      .insert({
+        installation_id: installationId,
+        date_intervention: dateVal,
+        description: descVal,
+        created_by: techName
+      });
+
+    if(error){
+      alert("Erreur : " + error.message);
+      return;
+    }
+
+    // Ajouter dans l'historique
+    await supabase
+      .from("historique")
+      .insert({
+        installation_id: installationId,
+        technicien: techName,
+        modifications: "Ajout intervention : " + (dateVal ? formatDate(dateVal) : "(sans date)") + " — " + (descVal || "(vide)")
+      });
+
+    await loadInterventions();
+    renderEdit();
+  }
+
+  // ============================================================
+  //  SUPPRIMER UNE INTERVENTION
+  // ============================================================
+  async function deleteIntervention(interId){
+    var inter = interventions.find(function(i){ return i.id === interId; });
+    if(!inter) return;
+
+    if(!confirm("Supprimer cette intervention ?")) return;
+
+    var techName = "";
+    var techInput = document.getElementById("input_technicien");
+    if(techInput) techName = techInput.value.trim();
+    if(!techName) techName = currentData.technicien || "Inconnu";
+
+    var {error} = await supabase
+      .from("interventions")
+      .delete()
+      .eq("id", interId);
+
+    if(error){
+      alert("Erreur : " + error.message);
+      return;
+    }
+
+    await supabase
+      .from("historique")
+      .insert({
+        installation_id: installationId,
+        technicien: techName,
+        modifications: "Suppression intervention : " + (inter.date_intervention ? formatDate(inter.date_intervention) : "") + " — " + (inter.description || "")
+      });
+
+    await loadInterventions();
+    renderEdit();
+  }
+
+  // ============================================================
+  //  MODIFIER UNE INTERVENTION
+  // ============================================================
+  async function updateIntervention(interId, newDate, newDesc){
+    var {error} = await supabase
+      .from("interventions")
+      .update({date_intervention: newDate, description: newDesc})
+      .eq("id", interId);
+
+    if(error){
+      alert("Erreur : " + error.message);
+    }
+  }
+
+  // ============================================================
+  //  BIND EVENTS INTERVENTIONS
+  // ============================================================
+  function bindInterventionEvents(){
+    // Bouton ajouter
+    var addBtn = document.getElementById("addInterBtn");
+    if(addBtn){
+      addBtn.addEventListener("click", function(){ addIntervention(); });
+    }
+
+    // Boutons supprimer
+    var deleteBtns = document.querySelectorAll(".inter-delete");
+    deleteBtns.forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var id = parseInt(btn.getAttribute("data-id"));
+        deleteIntervention(id);
+      });
+    });
+
+    // Modification en temps réel des interventions
+    var dateInputs = document.querySelectorAll(".inter-date:not([disabled])");
+    var descInputs = document.querySelectorAll(".inter-desc:not([disabled])");
+
+    dateInputs.forEach(function(input){
+      input.addEventListener("change", function(){
+        var index = parseInt(input.getAttribute("data-index"));
+        var inter = interventions[index];
+        if(inter){
+          var descEl = document.querySelector('.inter-desc[data-index="'+index+'"]');
+          updateIntervention(inter.id, input.value, descEl ? descEl.value : inter.description);
+        }
+      });
+    });
+
+    descInputs.forEach(function(input){
+      input.addEventListener("change", function(){
+        var index = parseInt(input.getAttribute("data-index"));
+        var inter = interventions[index];
+        if(inter){
+          var dateEl = document.querySelector('.inter-date[data-index="'+index+'"]');
+          updateIntervention(inter.id, dateEl ? dateEl.value : inter.date_intervention, input.value);
+        }
+      });
+    });
+  }
+  // ============================================================
+  //  SAUVEGARDER LES DONNÉES
+  // ============================================================
+  async function saveData(){
+    var newData = {};
+    var changes = [];
+
+    Object.keys(FIELDS).forEach(function(key){
+      var input = document.getElementById("input_"+key);
+      if(input && !input.disabled){
+        var newVal = input.value.trim();
+        var oldVal = currentData[key] || "";
+        if(newVal !== oldVal){
+          var f = FIELDS[key];
+          var label = key === "controle_seuil"
+            ? (currentData.label_controle || "Contrôle différentiel (mA)")
+            : f.label;
+          var oldDisplay = oldVal || "(vide)";
+          var newDisplay = newVal || "(vide)";
+          if(key === "type_coffrage"){
+            oldDisplay = TYPES_ARMOIRES[oldVal] || oldVal || "(vide)";
+            newDisplay = TYPES_ARMOIRES[newVal] || newVal || "(vide)";
+          }
+          changes.push(label + " : " + oldDisplay + " → " + newDisplay);
+        }
+        newData[key] = newVal;
+      }
+    });
+
+    var labelInput = document.getElementById("input_label_controle");
+    if(labelInput){
+      var newLabel = labelInput.value.trim();
+      if(newLabel !== (currentData.label_controle || "")){
+        changes.push("Nom du contrôle : " + (currentData.label_controle || "(vide)") + " → " + newLabel);
+      }
+      newData.label_controle = newLabel;
+    }
+
+    if(changes.length === 0){
+      editMode = false;
+      accessLevel = null;
+      renderView();
+      editBtn.style.display = "";
+      saveBtn.style.display = "none";
+      cancelBtn.style.display = "none";
+      return;
+    }
+
+    var techName = "";
+    var techInput = document.getElementById("input_technicien");
+    if(techInput) techName = techInput.value.trim();
+    if(!techName) techName = currentData.technicien || "Inconnu";
+
+    var {error} = await supabase
+      .from("installations")
+      .update(newData)
+      .eq("id", installationId);
+
+    if(error){
+      alert("Erreur lors de la sauvegarde : " + error.message);
+      return;
+    }
+
+    await supabase
+      .from("historique")
+      .insert({
+        installation_id: installationId,
+        technicien: techName,
+        modifications: changes.join("\n")
+      });
+
+    editMode = false;
+    accessLevel = null;
+    editBtn.style.display = "";
+    saveBtn.style.display = "none";
+    cancelBtn.style.display = "none";
+    await loadData();
+    await loadHistory();
+  }
+
+  // ============================================================
+  //  MODAL MOT DE PASSE
+  // ============================================================
+  function showModal(){
+    modalOverlay.classList.add("open");
+    modalError.textContent = "";
+    passwordInput.value = "";
+    passwordInput.focus();
+  }
+
+  function hideModal(){
+    modalOverlay.classList.remove("open");
+    modalError.textContent = "";
+    passwordInput.value = "";
+  }
+
+  function checkPassword(){
+    var pwd = passwordInput.value;
+    if(pwd === PASSWORD_ADMIN){
+      accessLevel = "admin";
+      hideModal();
+      enterEditMode();
+    } else if(pwd === PASSWORD_TECH){
+      accessLevel = "tech";
+      hideModal();
+      enterEditMode();
+    } else {
+      modalError.textContent = "Mot de passe incorrect.";
+      passwordInput.value = "";
+      passwordInput.focus();
+    }
+  }
+
+  // ============================================================
+  //  MODE ÉDITION
+  // ============================================================
+  function enterEditMode(){
+    editMode = true;
+    editBtn.style.display = "none";
+    saveBtn.style.display = "";
+    cancelBtn.style.display = "";
+    renderEdit();
+  }
+
+  function cancelEdit(){
+    editMode = false;
+    accessLevel = null;
+    editBtn.style.display = "";
+    saveBtn.style.display = "none";
+    cancelBtn.style.display = "none";
+    renderView();
+  }
+
+  // ============================================================
+  //  SIDEBAR HISTORIQUE
+  // ============================================================
+  function openSidebar(){
+    sidebar.classList.add("open");
+    sidebarOverlay.classList.add("open");
+    loadHistory();
+  }
+
+  function closeSidebar(){
+    sidebar.classList.remove("open");
+    sidebarOverlay.classList.remove("open");
+  }
+
+  // ============================================================
+  //  ÉVÉNEMENTS
+  // ============================================================
+  editBtn.addEventListener("click", function(){ showModal(); });
+  saveBtn.addEventListener("click", function(){ saveData(); });
+  cancelBtn.addEventListener("click", function(){ cancelEdit(); });
+  $("menuBtn").addEventListener("click", function(){ openSidebar(); });
+  $("sidebarClose").addEventListener("click", function(){ closeSidebar(); });
+  sidebarOverlay.addEventListener("click", function(){ closeSidebar(); });
+  $("modalConfirm").addEventListener("click", function(){ checkPassword(); });
+  $("modalCancel").addEventListener("click", function(){ hideModal(); });
+  passwordInput.addEventListener("keydown", function(e){
+    if(e.key === "Enter") checkPassword();
+  });
+
+  // ============================================================
+  //  DÉMARRAGE
+  // ============================================================
+  loadData();
+
+})();
+</script>
+</body>
+</html>
