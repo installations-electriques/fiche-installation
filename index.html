@@ -357,13 +357,14 @@ textarea.field-input{min-height:80px;resize:vertical}
       html += '<div class="interventions-empty">Aucune intervention enregistrée.</div>';
     } else {
       html += '<table class="interventions-table">';
-      html += '<thead><tr><th class="col-date">Date</th><th>Intervention</th><th class="col-actions"></th></tr></thead><tbody>';
+      html += '<thead><tr><th class="col-date">Date</th><th>Intervention</th><th>Réalisé par</th><th class="col-actions"></th></tr></thead><tbody>';
       interventions.forEach(function(inter, index){
         var canEdit = (accessLevel === "admin") || (inter.created_by === (currentData.technicien || ""));
         var dis = canEdit ? "" : "disabled";
         html += '<tr>';
         html += '<td><input type="date" class="field-input inter-date" data-index="'+index+'" value="'+(inter.date_intervention || "")+'" '+dis+'></td>';
         html += '<td><input type="text" class="field-input inter-desc" data-index="'+index+'" value="'+(inter.description || "").replace(/"/g,"&quot;")+'" '+dis+'></td>';
+        html += '<td>'+(inter.created_by || "")+'</td>';
         html += '<td>';
         if(canEdit) html += '<button class="btn btn-danger inter-delete" data-id="'+inter.id+'">X</button>';
         html += '</td></tr>';
