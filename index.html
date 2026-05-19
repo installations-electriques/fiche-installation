@@ -106,6 +106,16 @@ textarea.field-input{min-height:80px;resize:vertical}
 </head>
 <body>
 
+  <div class="global-lock" id="globalLock">
+  <div class="global-lock-card">
+    <h2>Accès réservé</h2>
+    <p>Entrez le mot de passe pour consulter cette fiche.</p>
+    <input type="password" id="globalPasswordInput" placeholder="Mot de passe">
+    <div class="global-lock-error" id="globalLockError"></div>
+    <button id="globalLockBtn">Valider</button>
+  </div>
+</div>
+  
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 <div class="sidebar" id="sidebar">
   <div class="sidebar-header">
