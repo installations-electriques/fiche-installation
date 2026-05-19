@@ -158,6 +158,35 @@ textarea.field-input{min-height:80px;resize:vertical}
   const PASSWORD_ADMIN = "admin2025";
   const PASSWORD_TECH  = "tech2025";
 
+  const GLOBAL_PASSWORD = "ramery2024"; // à personnaliser
+
+const globalLock = document.getElementById("globalLock");
+const globalPasswordInput = document.getElementById("globalPasswordInput");
+const globalLockBtn = document.getElementById("globalLockBtn");
+const globalLockError = document.getElementById("globalLockError");
+
+function unlockGlobal(){
+  if(globalPasswordInput.value === GLOBAL_PASSWORD){
+    globalLock.style.display = "none";
+    localStorage.setItem("globalAccessGranted", "1");
+  } else {
+    globalLockError.textContent = "Mot de passe incorrect.";
+    globalPasswordInput.value = "";
+    globalPasswordInput.focus();
+  }
+}
+
+globalLockBtn.addEventListener("click", unlockGlobal);
+globalPasswordInput.addEventListener("keydown", function(e){
+  if(e.key === "Enter") unlockGlobal();
+});
+
+if(localStorage.getItem("globalAccessGranted") === "1"){
+  globalLock.style.display = "none";
+} else {
+  globalPasswordInput.focus();
+}
+  
   // ============================================================
   //  TYPES D'ARMOIRES
   // ============================================================
